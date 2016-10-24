@@ -32,6 +32,9 @@ public class Utils {
     public static final String key_face_api = "2243ff3a06c0445790978dae85862bfe";
     public static final String key_vision_api = "a16ab0814a5c440a995ad8fb378f7eea";
     public static final String USER_AGENT = "Mozilla/5.0";
+    public static final String maxNumberOfCandidates = "1";
+    public static final double confidenceThreshold = 0.8;
+    public static String groupId = "thedreamteam3";
     
     public static String[] detect(String photo_url){
         HttpClient httpclient = HttpClients.createDefault();
@@ -71,6 +74,10 @@ public class Utils {
                 rectangle += "," + (String) String.valueOf(rectangle_json.get("top"));
                 rectangle += "," + (String) String.valueOf(rectangle_json.get("width"));
                 rectangle += "," + (String) String.valueOf(rectangle_json.get("height"));
+                if (response.getStatusLine().getStatusCode() != 200){
+                   System.err.println("detect error status: " + response.getStatusLine().getStatusCode());
+                   System.err.println("detect error detail: " + response.getStatusLine().getReasonPhrase());
+                }
             }
         }
         catch (Exception e)
@@ -105,7 +112,10 @@ public class Utils {
 
             if (entity != null) 
             {
-                System.out.println(EntityUtils.toString(entity));
+                if (response.getStatusLine().getStatusCode() != 200){
+                   System.err.println("createGroup error status: " + response.getStatusLine().getStatusCode());
+                   System.err.println("createGroup error detail: " + response.getStatusLine().getReasonPhrase());
+                }
             }
         }
         catch (Exception e)
@@ -146,12 +156,18 @@ public class Utils {
                 String entity_string = EntityUtils.toString(entity);
                 JSONObject entity_json = (JSONObject) parser.parse(entity_string);
                 id = (String) entity_json.get("personId");
+                if (response.getStatusLine().getStatusCode() != 200){
+                   System.err.println("createPerson error status: " + response.getStatusLine().getStatusCode());
+                   System.err.println("createPerson error detail: " + response.getStatusLine().getReasonPhrase());
+                }
             }
         }
         catch (Exception e)
         {
             System.out.println(e.getMessage());
         }
+        
+        System.out.println("Id de la persona: " + id);
         
         return id;
     }
@@ -168,9 +184,13 @@ public class Utils {
             url_for_request += "/persons/";
             url_for_request += personId;
             url_for_request += "/persistedFaces";
+            
             URIBuilder builder = new URIBuilder(url_for_request);
-            builder.setParameter("targetFace", rectangle);
+            if(rectangle != null){
+                builder.setParameter("targetFace", rectangle);
+            }
             URI uri = builder.build();
+            
 
             HttpPost request = new HttpPost(uri);
             request.setHeader("Content-Type", "application/json");
@@ -190,8 +210,8 @@ public class Utils {
                 JSONObject entity_json = (JSONObject) parser.parse(entity_string);
                 id = (String) entity_json.get("persistedFaceId");
                 if (response.getStatusLine().getStatusCode() != 200){
-                    System.err.println("Error status: " + response.getStatusLine().getStatusCode());
-                    System.err.println("Error detail: " + response.getStatusLine().getReasonPhrase());
+                    System.err.println("addFace error status: " + response.getStatusLine().getStatusCode());
+                    System.err.println("addFace error detail: " + response.getStatusLine().getReasonPhrase());
                 }
             }
             
@@ -200,6 +220,8 @@ public class Utils {
         {
             System.out.println(e.getMessage());
         }
+        
+        System.out.println("He afegit una cara amb id: " + id);
         
         return id;
     }
@@ -211,17 +233,18 @@ public class Utils {
         {
             String url = "https://api.projectoxford.ai/face/v1.0/persongroups/";
             url += groupId;
-            url += "train";
+            url += "/train";
             URIBuilder builder = new URIBuilder(url);
 
 
             URI uri = builder.build();
             HttpPost request = new HttpPost(uri);
-            request.setHeader("Ocp-Apim-Subscription-Key", "{subscription key}");
+            request.setHeader("Ocp-Apim-Subscription-Key", Utils.key_face_api);
 
 
             // Request body
-            StringEntity reqEntity = new StringEntity("{body}");
+            String body = "{}";
+            StringEntity reqEntity = new StringEntity(body);
             request.setEntity(reqEntity);
 
             HttpResponse response = httpclient.execute(request);
@@ -229,13 +252,126 @@ public class Utils {
 
             if (entity != null) 
             {
-                System.out.println(EntityUtils.toString(entity));
+                if (response.getStatusLine().getStatusCode() != 202){
+                    System.err.println("trainGroup error status: " + response.getStatusLine().getStatusCode());
+                    System.err.println("trainGroup error detail: " + response.getStatusLine().getReasonPhrase());
+                }
             }
         }
         catch (Exception e)
         {
             System.out.println(e.getMessage());
         }
+        
+        System.out.println("He començat a entrenar-me");
+    }
+    
+    public static String[] getTrainingStatus(String groupId){
+        HttpClient httpclient = HttpClients.createDefault();
+        JSONParser parser = new JSONParser();
+        String train_status = null;
+        String train_createdDateTime = null;
+        String train_lastActionTime = null;
+        String train_message = null;
+
+        try
+        {
+            String url = "https://api.projectoxford.ai/face/v1.0/persongroups/";
+            url += groupId;    
+            url += "/training";
+            URIBuilder builder = new URIBuilder(url);
+
+
+            URI uri = builder.build();
+            HttpGet request = new HttpGet(uri);
+            request.setHeader("Ocp-Apim-Subscription-Key", Utils.key_face_api);
+
+            HttpResponse response = httpclient.execute(request);
+            HttpEntity entity = response.getEntity();
+
+            if (entity != null) 
+            {
+               String entity_string = EntityUtils.toString(entity);
+               JSONObject entity_json = (JSONObject) parser.parse(entity_string);
+               train_status = (String) entity_json.get("status");
+               train_createdDateTime = (String) entity_json.get("createdDateTime");
+               train_lastActionTime = (String) entity_json.get("lastActionTime");
+               train_message = (String) entity_json.get("message");
+               if (response.getStatusLine().getStatusCode() != 200){
+                   System.err.println("getTrainingStatus error status: " + response.getStatusLine().getStatusCode());
+                   System.err.println("getTrainingStatus error detail: " + response.getStatusLine().getReasonPhrase());
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            System.out.println(e.getMessage());
+        }
+        
+        return new String[] {train_status, train_createdDateTime, train_lastActionTime, train_message};
+    }
+    
+    public static String[] identify(String groupId, String[] faceIds_array){
+        HttpClient httpclient = HttpClients.createDefault();
+        JSONParser parser = new JSONParser();
+        String[] matches = new String[faceIds_array.length];
+
+        try
+        {
+            URIBuilder builder = new URIBuilder("https://api.projectoxford.ai/face/v1.0/identify");
+
+
+            URI uri = builder.build();
+            HttpPost request = new HttpPost(uri);
+            request.setHeader("Content-Type", "application/json");
+            request.setHeader("Ocp-Apim-Subscription-Key", Utils.key_face_api);
+
+
+            // Request body
+            String body = "{\"personGroupId\":\"" + groupId;
+            body += "\",\"faceIds\":[";
+            for(int i = 0; i < faceIds_array.length; ++i){
+                body += "\"";
+                body += faceIds_array[i];
+                body += "\",";
+            }
+            body += "],\"maxNumOfCandidatesReturned\":" + Utils.maxNumberOfCandidates;
+            body += ",\"conficenceThreshold\": " + String.valueOf(Utils.confidenceThreshold);
+            body += "}";
+            StringEntity reqEntity = new StringEntity(body);
+            request.setEntity(reqEntity);
+
+            HttpResponse response = httpclient.execute(request);
+            HttpEntity entity = response.getEntity();
+
+            if (entity != null) 
+            {
+                String entity_string = EntityUtils.toString(entity);
+                JSONArray entity_json_array = (JSONArray) parser.parse(entity_string);
+                for(int i = 0; i < faceIds_array.length; i++){
+                    JSONObject entity_json = (JSONObject) entity_json_array.get(i);
+                    JSONArray candidates_array = (JSONArray) entity_json.get("candidates");
+                    JSONObject candidates = (JSONObject) candidates_array.get(0);
+                    String id_candidate = (String) candidates.get("personId");
+                    double confidence = (double) candidates.get("confidence");
+                    if(confidence >= Utils.confidenceThreshold){
+                        matches[i] = id_candidate;
+                    } else{
+                        matches[i] = null; 
+                    }                    
+                }
+                if (response.getStatusLine().getStatusCode() != 200){
+                   System.err.println("identify error status: " + response.getStatusLine().getStatusCode());
+                   System.err.println("identify error detail: " + response.getStatusLine().getReasonPhrase());
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            System.out.println(e.getMessage());
+        }
+        
+        return matches;
     }
    
     

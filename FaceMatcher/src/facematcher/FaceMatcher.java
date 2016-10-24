@@ -20,7 +20,7 @@ public class FaceMatcher {
     public static void main(String[] args) throws IOException, MalformedURLException, ParseException {
         
         String photo_url = "https://timebusinessblog.files.wordpress.com/2012/02/600_biz_zuckerberg_02011.jpg";
-        String groupId = "g10";
+        String groupId = "bugdestroyers10";
         String person_name = "Marc Zuckerberk";
         
         String[] detection = Utils.detect(photo_url);
@@ -33,6 +33,9 @@ public class FaceMatcher {
         System.out.println("PersonId: " + personId);
         String persistedFaceId = Utils.addFace(groupId, personId, rectangle, photo_url);
         System.out.println("PersistedFaceId: " + persistedFaceId);
+        Utils.trainGroup(groupId);
+        String[] train_status = Utils.getTrainingStatus(groupId);
+        System.out.println("Train status: " + train_status[0]);
         
     }
     
