@@ -13,7 +13,7 @@ public class Test3 {
     
     public static void main(String[] args){       
         
-        System.out.println(FaceMatcher.faceMatcher(Utils.test_david));
+        System.out.println(FaceMatcher.faceMatcher(Utils.test_oleguer));
         
     }    
 }

@@ -5,38 +5,47 @@
  */
 package facematcher;
 
+import java.util.ArrayList;
+
 /**
  *
  * @author borja
  */
 public class Server {
     
-    public static void main(String[] args){
+    public static void main(String[] args) throws InterruptedException{
         
-        int opt = -1;
-        String nom = null;
-        String id = null;
-        String[] urls = null;
-        String url = null;
+        String matchId = null;
+        String urlImage = null;
+        String macId = null;
+        String name = null; 
+        ArrayList<String> macs = new ArrayList<>();
         
-        //Anem llegint infinitament opció
-        if(opt == Utils.login){
-            //LLegim en ordre un String (nom de la persona) i un String[] 
-            //amb les url de les fotos que la persona té
-            String personId = PersonData.LogIn(nom, urls);
-            //retornem l'ID de la persona per a guardarla com a id-nomac
-        } else if(opt == Utils.addFace){
-            //LLegim en ordre un String (id-nomac) i un String[]
-            //amb les url de les fotos que la persona s'ha fet noves
-            PersonData.AddFace(id, urls);
-        } else if(opt == Utils.faceMatcher){
-            //Llegim un String (url de la foto que ha pres la càmera) 
-            String matchId = FaceMatcher.faceMatcher(url);
-            //retornem la id-nomac de la persona amb qui s'ha fet el match
+        //Anem llegint infinitament 
+        while(true){
+            
+            urlImage = Utils.getLastImage();
+            macs = Utils.getBluetoothAdress();
+            
+            while(matchId == null || matchId.equals("Match not found")){
+                urlImage = Utils.getLastImage();
+                System.out.println("The url image is: " + urlImage);
+                matchId = FaceMatcher.faceMatcher(urlImage);
+                System.out.println("The matchId is: " + matchId);
+                Thread.sleep(3500);
+            }
+           
+            macId = Utils.getMacId(matchId);
+            
+            for (int i = 0; i < macs.size(); ++i){
+                if (macId.equals(macs.get(i))){
+                    Utils.eraseTravel(macId);
+                    break;
+                }
+            } 
             
         }
-        
-        
+
     }
     
 }

@@ -8,6 +8,7 @@ package facematcher;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URLEncoder;
+import java.util.ArrayList;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -27,6 +28,8 @@ import org.json.simple.parser.JSONParser;
  * @author borja
  */
 public class Utils {
+    
+    public static final String our_api_url = "http://tutorialsmarttube.azurewebsites.net";
     
     public static final String key_video_api = "28991674eeeb476ba42f0a25e27845d8";
     public static final String key_face_api = "2243ff3a06c0445790978dae85862bfe";
@@ -388,9 +391,141 @@ public class Utils {
         
         return matches;
     }
-   
     
-    
+    public static String getLastImage(){
+        HttpClient httpclient = HttpClients.createDefault();
+        JSONParser parser = new JSONParser();
+        String urlImage = null;
 
+        try
+        {
+            String url = Utils.our_api_url;
+            url += "/getLastImage";    
+            URIBuilder builder = new URIBuilder(url);
+
+            URI uri = builder.build();
+            HttpGet request = new HttpGet(uri);
+
+            HttpResponse response = httpclient.execute(request);
+            HttpEntity entity = response.getEntity();
+
+            if (entity != null) 
+            {
+               String entity_string = EntityUtils.toString(entity);
+               JSONObject entity_json = (JSONObject) parser.parse(entity_string);
+               urlImage = (String) entity_json.get("url");
+               if (response.getStatusLine().getStatusCode() != 200){
+                   System.err.println("getTrainingStatus error status: " + response.getStatusLine().getStatusCode());
+                   System.err.println("getTrainingStatus error detail: " + response.getStatusLine().getReasonPhrase());
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            System.out.println(e.getMessage());
+        }
+        
+        return urlImage;
+    }
     
+    public static ArrayList<String> getBluetoothAdress(){
+        HttpClient httpclient = HttpClients.createDefault();
+        JSONParser parser = new JSONParser();
+        ArrayList<String> macs = new ArrayList<>();
+
+        try
+        {
+            String url = Utils.our_api_url;
+            url += "/getMacs";    
+            URIBuilder builder = new URIBuilder(url);
+
+            URI uri = builder.build();
+            HttpGet request = new HttpGet(uri);
+
+            HttpResponse response = httpclient.execute(request);
+            HttpEntity entity = response.getEntity();
+
+            if (entity != null) 
+            {
+               String entity_string = EntityUtils.toString(entity);
+               JSONObject entity_json = (JSONObject) parser.parse(entity_string);
+               JSONArray entity_json_array = (JSONArray) entity_json.get("macs");
+               for (int i = 0; i < entity_json_array.size(); ++i){
+                   macs.add( (String) entity_json_array.get(i).toString());
+                   System.out.println(macs.get(i));
+               }
+               
+               if (response.getStatusLine().getStatusCode() != 200){
+                   System.err.println("getTrainingStatus error status: " + response.getStatusLine().getStatusCode());
+                   System.err.println("getTrainingStatus error detail: " + response.getStatusLine().getReasonPhrase());
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            System.out.println(e.getMessage());
+        }
+        
+        return macs;
+    }
+    
+    public static String getMacId(String id){
+        HttpClient httpclient = HttpClients.createDefault();
+        JSONParser parser = new JSONParser();
+        String macId = null;
+
+        try
+        {
+            String url = Utils.our_api_url;
+            url += "/info/" + id;
+            URIBuilder builder = new URIBuilder(url);
+
+            URI uri = builder.build();
+            HttpGet request = new HttpGet(uri);
+
+            HttpResponse response = httpclient.execute(request);
+            HttpEntity entity = response.getEntity();
+
+            if (entity != null) 
+            {
+               String entity_string = EntityUtils.toString(entity);
+               
+               JSONObject entity_json = (JSONObject) parser.parse(entity_string);
+               macId = (String) entity_json.get("mac");
+               
+               if (response.getStatusLine().getStatusCode() != 200){
+                   System.err.println("getTrainingStatus error status: " + response.getStatusLine().getStatusCode());
+                   System.err.println("getTrainingStatus error detail: " + response.getStatusLine().getReasonPhrase());
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            System.out.println(e.getMessage());
+        }
+        
+        return macId;
+    }  
+    
+    public static void eraseTravel(String matchId){
+        HttpClient httpclient = HttpClients.createDefault();
+        JSONParser parser = new JSONParser();
+
+        try
+        {
+            String url = Utils.our_api_url;
+            url += "/sumaViatges/" + matchId;
+            url += "?viatges=-1";
+            URIBuilder builder = new URIBuilder(url);
+
+            URI uri = builder.build();
+            HttpGet request = new HttpGet(uri);
+
+            HttpResponse response = httpclient.execute(request);
+        }
+        catch (Exception e)
+        {
+            System.out.println(e.getMessage());
+        }
+    }
 }
