@@ -22,40 +22,9 @@ public class Test3 {
     public static String isaac = "6a2c67bc-a52d-4b10-bc59-4c224facbfe4";
     public static String louis = "87a26556-929c-4aeb-9b64-2a97060583b9";
     
-    public static void main(String[] args){
+    public static void main(String[] args){       
         
-        String photo_url = test_oleguer;
-        
-        String[] detection = Utils.detect(photo_url);
-        
-        String[] faceIds = {detection[0]};
-        
-        String[] matches = Utils.identify(Utils.groupId, faceIds);
-        String match = Matcher.getMatch(matches);
-        
-        String post = null;
-        
-        if(match != null){
-            if(match.equals(borja)){
-                post = "Borja";
-            } else if(match.equals(oleguer)){
-                post = "Oleguer";
-            } else if(match.equals(david)){
-                post = "David";
-            } else if(match.equals(isaac)){
-                post = "Isaac";
-            } else if(match.equals(louis)){
-                post = "Louis";
-            }
-            
-            System.out.println("He detectat a " + post);
-        } else{
-            System.out.println("No he trobat cap match");
-        }
-        
-        
-        
-        
+        System.out.println(FaceMatcher.faceMatcher(test_borja));
         
     }    
 }
